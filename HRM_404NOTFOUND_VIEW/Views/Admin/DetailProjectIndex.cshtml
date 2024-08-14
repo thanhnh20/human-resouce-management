@@ -1,0 +1,262 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Project Detail";
+}
+<style>
+    html {
+        font-size: 14px;
+        font-family: Arial, Helvetica, sans-serif;
+    }</style>
+<title></title>
+
+<div id="example">
+    <div class="mt-2">      
+            <a href="/Admin/AssignEmployee"  class="btn btn-info">Assign Employee</a>
+        </div>
+    <div id="detailEmployeeGrid"></div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#detailEmployeeGrid").kendoGrid({
+            dataSource: {
+                transport: {
+                    read: function (options) {
+                        var currentUrl = window.location.href;
+                        var parts = currentUrl.split('/');
+                        var value = parts.pop();
+                        $.ajax({
+                            url: "https://localhost:5000/api/Employee/project/" + value,
+                            type: "GET",
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader("Authorization", "Bearer " + sessionStorage.getItem('ACCESS_TOKEN'));
+                            },
+                            success: function (result) {
+                                options.success(result);
+                            },
+                            error: function (result) {
+                                options.error(result);
+                            }
+                        });
+                    },
+                    update: function (options) {
+                        var newData = options.data;
+
+                        $.ajax({
+                            url: "https://localhost:5000/api/EmployeeProject/update-empl",
+                            type: "PUT",
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader("Authorization", "Bearer " + sessionStorage.getItem('ACCESS_TOKEN'));
+                            },
+                            data: JSON.stringify({
+                                projectID: newData.idOfProjectCurrent,
+                                employeeID: newData.employeeID,
+                                startDate: newData.startDateEmployeeProject,
+                                endDate: newData.endDateEmployeeProject,
+                                employeeProjectStatus: newData.statusEmployeeProject
+                            }),
+                            contentType: "application/json",
+                            success: function (result) {
+                                options.success(result);
+                                var grid = $("#detailEmployeeGrid").data("kendoGrid");
+                                grid.dataSource.read();
+                                grid.refresh();
+                                demo.showNotification(result['data'], 1);
+                            },
+                            error: function (result) {
+                                options.error(result);
+                                demo.showNotification("An error has occurred in the system, please contact the administrator.", 4);
+                            }
+                        });
+                    },
+                    destroy: function (options) {
+                        var newData = options.data;
+                        $.ajax({
+                            url: "https://localhost:5000/api/EmployeeProject?employeeID=" + newData.employeeID + "&projectID=" + newData.idOfProjectCurrent,
+                            type: "DELETE",
+                            beforeSend: function (xhr) {
+                                xhr.setRequestHeader("Authorization", "Bearer " + sessionStorage.getItem('ACCESS_TOKEN'));
+                            },
+                            success: function (result) {
+                                options.success(result);
+                                var grid = $("#detailEmployeeGrid").data("kendoGrid");
+                                grid.dataSource.read();
+                                grid.refresh();
+                                demo.showNotification(result['data'], 1);
+                            },
+                            error: function (result) {
+                                options.error(result);
+                                demo.showNotification("An error has occurred in the system, please contact the administrator.", 4);
+                            }
+                        });
+                    },
+                },
+                schema: {
+                    data: "data",
+                    model: {
+                        id: "employeeID",
+                        fields: {
+                            employeeID: {
+                                editable: false, nullable: true, type: "number", validation: {
+                                    required: false
+                                },
+                            },
+                            idOfProjectCurrent: {
+                                editable: false, nullable: true, type: "number", validation: {
+                                    required: false
+                                },
+                            },
+                            employeeName: {
+                                editable: false, nullable: true, type: "string", validation: {
+                                    required: false
+                                },
+                            },
+                            address: {
+                                editable: false, nullable: true, type: "string", validation: {
+                                    required: false
+                                },
+                            },
+                            gender: {
+                                editable: false, nullable: true, type: "string", validation: {
+                                    required: false
+                                },
+                            },
+                            phoneNumber: {
+                                editable: false, nullable: true, type: "string", validation: {
+                                    required: false
+                                },
+                            },
+                            emailAddress: {
+                                editable: false, nullable: true, type: "string", validation: {
+                                    required: false
+                                },
+                            },
+                            employeeStatus: {
+                                editable: false, nullable: true, type: "number", validation: {
+                                    required: false
+                                },
+                            },
+                            birthDate: {
+                                editable: false, nullable: true, type: "date", validation: {
+                                    required: false
+                                },
+                            },
+                            startDateEmployeeProject: { type: "date" },
+                            endDateEmployeeProject: { type: "date" },
+                            statusEmployeeProject: { type: "int" },
+                            roleId: {type: "int"},
+                        }
+                    }
+                },
+                pageSize: 20,
+            },
+            height: 550,
+            editable: {
+                mode: "popup",
+                window: {
+                    title: "Edit Employee Of The Project",
+                    animation: true
+                }
+            },
+            sortable: true,
+            filterable: true,
+            pageable: {
+                refresh: true,
+                pageSizes: true,
+                buttonCount: 5
+            },
+            columns: [
+                {
+                    command: ["edit", "destroy"],
+                    title: "&nbsp;",
+                    width: "180px",
+                },
+                {
+                    field: "employeeID",
+                    title: "ID",
+                    filterable: { multi: true },
+                    width: "90px"
+                }, {
+                    field: "employeeName",
+                    title: "Employee Name",
+                    filterable: { multi: true },
+                    width: "250px",
+                    template: "#= truncateString(employeeName, 30) #"
+                }, {
+                    field: "address",
+                    title: "Address",
+                    filterable: {
+                        multi: true
+                    },
+                    width: "250px",
+                    template: "#= truncateString(address, 30) #"
+                }, {
+                    field: "gender",
+                    title: "Gender",
+                    filterable: { multi: true },
+                    width: 120
+                }, {
+                    field: "phoneNumber",
+                    title: "Phone",
+                    filterable: { multi: true },
+                    width: 120,
+                }, {
+                    field: "emailAddress",
+                    title: "Email",
+                    filterable: { multi: true },
+                    width: "180px",
+                }, {
+                    field: "birthDate",
+                    title: "Birth Date",
+                    format: "{0:dd-MM-yyyy}",
+                    filterable: { multi: true },
+                    width: 120,
+                }, {
+                    field: "startDateEmployeeProject",
+                    title: "Start Date",
+                    format: "{0:dd-MM-yyyy}",
+                    filterable: { multi: true },
+                    width: 120,
+                }, {
+                    field: "endDateEmployeeProject",
+                    title: "End Date",
+                    format: "{0:dd-MM-yyyy}",
+                    filterable: { multi: true },
+                    width: 120,
+                }, {
+                    field: "statusEmployeeProject",
+                    title: "Status",
+                    filterable: { multi: true },
+                    width: "150px",
+                    template: function (dataItem) {
+                        if (dataItem.statusEmployeeProject == 0) return "Not Started";
+                        if (dataItem.statusEmployeeProject == 1) return "Work-In-Progress";
+                        if (dataItem.statusEmployeeProject == 2) return "Done";
+                        return "-";
+                    },
+                    editor: function (container, options) {
+                        $('<input required data-text-field="text" data-value-field="value" data-bind="value:' + options.field + '"/>')
+                            .appendTo(container)
+                            .kendoDropDownList({
+                                dataSource: [
+                                    { text: "Not Started", value: "0" },
+                                    { text: "Work-In-Progress", value: "1" },
+                                    { text: "Done", value: "2" }
+                                ],
+                                optionLabel: "--Select--"
+                            });
+                    }
+                }, {
+                    field: "roleId",
+                    title: "Role",
+                    filterable: { multi: true },
+                    width: 100,
+                    template: function (dataItem) {
+                        if (dataItem.roleId == 1) return "Employee";
+                        if (dataItem.roleId == 3) return "Manager";
+                        return "-";
+                    },
+                }
+            ]
+        });
+    });
+</script>
